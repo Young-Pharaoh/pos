@@ -1,0 +1,28 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.venv/
+venv/
+
+# Runtime data (never commit shop data)
+store.db
+store.db-journal
+store.db-wal
+store.db-shm
+images/items/*
+!images/items/.gitkeep
+logs/*
+!logs/.gitkeep
+backups/
+
+# Packaging output
+build/*
+!build/.gitkeep
+dist/
+*.spec.bak
+
+# Editor/OS
+.vscode/
+.idea/
+.DS_Store
