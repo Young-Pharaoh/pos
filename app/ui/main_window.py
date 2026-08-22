@@ -8,7 +8,7 @@ jump directly between pages for keyboard-first use.
 from __future__ import annotations
 
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QAction, QKeySequence
+from PySide6.QtGui import QAction, QGuiApplication, QKeySequence
 from PySide6.QtWidgets import (
     QApplication,
     QButtonGroup,
@@ -24,15 +24,23 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from app.i18n import LANGUAGES, is_rtl, language_display_name, set_language, t
+from app.i18n import LANGUAGES, is_rtl, language_display_name, set_language, t, text_scale_display_name
 from app.services.backup_service import backup_database
-from app.services.settings_service import LANGUAGE_KEY
+from app.services.settings_service import LANGUAGE_KEY, TEXT_SCALE_KEY
 from app.ui.app_context import AppContext
 from app.ui.dashboard.dashboard_page import DashboardPage
 from app.ui.products.products_page import ProductsPage
 from app.ui.reports.reports_page import ReportsPage
 from app.ui.sales.sales_page import SalesPage
 from app.ui.settings_dialog import SettingsDialog
+from app.text_scale import (
+    TEXT_SCALE_PRESETS,
+    app_title_stylesheet,
+    apply_to_application,
+    nav_button_min_height,
+    normalize_text_scale,
+    window_size_for_preset,
+)
 from app.ui.widgets.common import guarded, show_error, show_info
 from app.utils.paths import get_db_path
 
@@ -50,6 +58,7 @@ class MainWindow(QMainWindow):
 
         self._build_ui()
         self._apply_language(self.context.settings.language)
+        self._apply_text_scale(self.context.settings.text_scale)
 
     def _build_ui(self) -> None:
         central = QWidget()
@@ -57,9 +66,15 @@ class MainWindow(QMainWindow):
 
         header_layout = QHBoxLayout()
         self.title_label = QLabel()
-        self.title_label.setStyleSheet("font-size: 22px; font-weight: 700;")
         header_layout.addWidget(self.title_label)
         header_layout.addStretch()
+        self.text_scale_label = QLabel()
+        header_layout.addWidget(self.text_scale_label)
+        self.text_scale_combo = QComboBox()
+        for preset in TEXT_SCALE_PRESETS:
+            self.text_scale_combo.addItem(text_scale_display_name(preset), preset)
+        self.text_scale_combo.currentIndexChanged.connect(self._on_text_scale_changed)
+        header_layout.addWidget(self.text_scale_combo)
         self.language_combo = QComboBox()
         for lang in LANGUAGES:
             self.language_combo.addItem(language_display_name(lang), lang)
@@ -121,6 +136,60 @@ class MainWindow(QMainWindow):
         self.about_action.triggered.connect(self._on_about)
         self.help_menu.addAction(self.about_action)
 
+    def _on_text_scale_changed(self) -> None:
+        preset = self.text_scale_combo.currentData()
+        if preset is None:
+            return
+        self._apply_text_scale(preset)
+        with guarded(self):
+            self.context.settings_service.set(TEXT_SCALE_KEY, preset)
+            self.context.refresh_settings()
+
+    def _apply_text_scale(self, preset: str) -> None:
+        preset = normalize_text_scale(preset)
+        app = QApplication.instance()
+        if app is not None:
+            apply_to_application(app, preset)
+
+        self.title_label.setStyleSheet(app_title_stylesheet(preset))
+        for button in self.nav_buttons.values():
+            button.setMinimumHeight(nav_button_min_height(preset))
+
+        target_width, target_height = window_size_for_preset(preset)
+        screen = self.screen() or QGuiApplication.primaryScreen()
+        if screen is not None:
+            available = screen.availableGeometry()
+            target_width = min(target_width, available.width())
+            target_height = min(target_height, available.height())
+        if self.width() < target_width or self.height() < target_height:
+            self.resize(
+                max(self.width(), target_width),
+                max(self.height(), target_height),
+            )
+
+        self.dashboard_page.apply_text_scale(preset)
+        self.products_page.apply_text_scale(preset)
+        self.sales_page.apply_text_scale(preset)
+        self.reports_page.apply_text_scale(preset)
+
+        index = self.text_scale_combo.findData(preset)
+        if index >= 0:
+            self.text_scale_combo.blockSignals(True)
+            self.text_scale_combo.setCurrentIndex(index)
+            self.text_scale_combo.blockSignals(False)
+
+    def _populate_text_scale_combo(self) -> None:
+        current = self.text_scale_combo.currentData()
+        self.text_scale_combo.blockSignals(True)
+        self.text_scale_combo.clear()
+        for preset in TEXT_SCALE_PRESETS:
+            self.text_scale_combo.addItem(text_scale_display_name(preset), preset)
+        if current is not None:
+            index = self.text_scale_combo.findData(current)
+            if index >= 0:
+                self.text_scale_combo.setCurrentIndex(index)
+        self.text_scale_combo.blockSignals(False)
+
     def _on_language_changed(self) -> None:
         lang = self.language_combo.currentData()
         if lang is None:
@@ -158,6 +227,8 @@ class MainWindow(QMainWindow):
         self.exit_action.setText(t("menu.exit"))
         self.help_menu.setTitle(t("menu.help"))
         self.about_action.setText(t("menu.about"))
+        self.text_scale_label.setText(t("menu.text_scale"))
+        self._populate_text_scale_combo()
 
         self.db_status_label.setText(t("status.db_path", path=str(get_db_path())))
 

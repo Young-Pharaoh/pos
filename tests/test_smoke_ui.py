@@ -61,6 +61,29 @@ def test_language_toggle_switches_layout_direction(qtbot, session_factory):
     assert QApplication.instance().layoutDirection() == Qt.LayoutDirection.LeftToRight
 
 
+def test_text_scale_combo_persists_and_increases_font(qtbot, session_factory):
+    from app.services.settings_service import TEXT_SCALE_KEY
+    from app.text_scale import TEXT_SCALE_EXTRA_LARGE, TEXT_SCALE_NORMAL
+
+    context = AppContext.build(session_factory)
+    window = MainWindow(context)
+    qtbot.addWidget(window)
+
+    normal_font = QApplication.instance().font().pointSizeF()
+    assert window.text_scale_combo.currentData() == TEXT_SCALE_NORMAL
+
+    extra_large_index = window.text_scale_combo.findData(TEXT_SCALE_EXTRA_LARGE)
+    window.text_scale_combo.setCurrentIndex(extra_large_index)
+
+    assert QApplication.instance().font().pointSizeF() > normal_font
+    assert context.settings_service.get(TEXT_SCALE_KEY) == TEXT_SCALE_EXTRA_LARGE
+
+    normal_index = window.text_scale_combo.findData(TEXT_SCALE_NORMAL)
+    window.text_scale_combo.setCurrentIndex(normal_index)
+    assert QApplication.instance().font().pointSizeF() == normal_font
+    assert context.settings_service.get(TEXT_SCALE_KEY) == TEXT_SCALE_NORMAL
+
+
 def test_create_product_via_dialog_and_see_it_in_products_table(qtbot, session_factory):
     context = AppContext.build(session_factory)
     window = MainWindow(context)

@@ -72,6 +72,10 @@ STRINGS: dict[str, dict[str, str]] = {
             "Base de datos: {db_path}"
         ),
         "menu.language": "Idioma",
+        "menu.text_scale": "Tamano de texto",
+        "text_scale.normal": "Normal",
+        "text_scale.large": "Grande",
+        "text_scale.extra_large": "Extra grande",
         "status.db_path": "Base de datos: {path}",
         "dashboard.title": "Panel Principal",
         "dashboard.today_sales": "Ventas de Hoy",
@@ -283,6 +287,10 @@ STRINGS: dict[str, dict[str, str]] = {
             "\u0642\u0627\u0639\u062f\u0629 \u0627\u0644\u0628\u064a\u0627\u0646\u0627\u062a: {db_path}"
         ),
         "menu.language": "\u0627\u0644\u0644\u063a\u0629",
+        "menu.text_scale": "\u062d\u062c\u0645 \u0627\u0644\u0646\u0635",
+        "text_scale.normal": "\u0639\u0627\u062f\u064a",
+        "text_scale.large": "\u0643\u0628\u064a\u0631",
+        "text_scale.extra_large": "\u0643\u0628\u064a\u0631 \u062c\u062f\u0627\u064b",
         "status.db_path": "\u0642\u0627\u0639\u062f\u0629 \u0627\u0644\u0628\u064a\u0627\u0646\u0627\u062a: {path}",
         "dashboard.title": "\u0644\u0648\u062d\u0629 \u0627\u0644\u062a\u062d\u0643\u0645",
         "dashboard.today_sales": "\u0645\u0628\u064a\u0639\u0627\u062a \u0627\u0644\u064a\u0648\u0645",
@@ -466,6 +474,10 @@ def set_language(language: str) -> None:
 
 def language_display_name(language: str) -> str:
     return _LANGUAGE_NAMES.get(language, language)
+
+
+def text_scale_display_name(preset: str, language: str | None = None) -> str:
+    return t(f"text_scale.{preset}", language=language)
 
 
 def is_rtl(language: str | None = None) -> bool:

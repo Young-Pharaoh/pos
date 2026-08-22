@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from PySide6.QtWidgets import QFrame, QLabel, QVBoxLayout
 
+from app.text_scale import stat_card_title_stylesheet, stat_card_value_stylesheet
+
 
 class StatCard(QFrame):
     def __init__(self, parent=None):
@@ -16,11 +18,13 @@ class StatCard(QFrame):
         )
         layout = QVBoxLayout(self)
         self.title_label = QLabel()
-        self.title_label.setStyleSheet("color: #555555; font-size: 12px;")
         self.value_label = QLabel()
-        self.value_label.setStyleSheet("font-size: 22px; font-weight: 600;")
         layout.addWidget(self.title_label)
         layout.addWidget(self.value_label)
+
+    def apply_text_scale(self, preset: str) -> None:
+        self.title_label.setStyleSheet(stat_card_title_stylesheet(preset))
+        self.value_label.setStyleSheet(stat_card_value_stylesheet(preset))
 
     def set_title(self, text: str) -> None:
         self.title_label.setText(text)

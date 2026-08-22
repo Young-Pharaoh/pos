@@ -38,6 +38,7 @@ DEFAULT_SETTINGS = {
     "default_sell_price": "1.00",
     "currency_symbol": "$",
     "language": "es",
+    "text_scale": "normal",
     "schema_version": "1",
 }
 

@@ -21,6 +21,7 @@ from app.services.inventory_service import ItemView
 from app.ui.app_context import AppContext
 from app.ui.products.add_stock_dialog import AddStockDialog
 from app.ui.products.product_dialog import ProductDialog
+from app.text_scale import action_button_min_height, apply_table_row_height, page_title_stylesheet
 from app.ui.widgets.common import combined_name, confirm, guarded, show_error, show_info
 from app.ui.widgets.image_view import ImageView
 
@@ -39,7 +40,6 @@ class ProductsPage(QWidget):
         layout = QVBoxLayout(self)
 
         self.title_label = QLabel()
-        self.title_label.setStyleSheet("font-size: 20px; font-weight: 600;")
         layout.addWidget(self.title_label)
 
         search_layout = QHBoxLayout()
@@ -114,6 +114,19 @@ class ProductsPage(QWidget):
         self.add_stock_button.setText(t("products.button_add_stock"))
         self.delete_button.setText(t("products.button_delete"))
         self.refresh()
+
+    def apply_text_scale(self, preset: str) -> None:
+        self.title_label.setStyleSheet(page_title_stylesheet(preset))
+        button_height = action_button_min_height(preset)
+        for btn in (
+            self.new_button,
+            self.edit_button,
+            self.add_stock_button,
+            self.archive_button,
+            self.delete_button,
+        ):
+            btn.setMinimumHeight(button_height)
+        apply_table_row_height(self.table, preset)
 
     def refresh(self) -> None:
         query = self.search_edit.text()

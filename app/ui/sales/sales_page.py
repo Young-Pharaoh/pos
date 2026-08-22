@@ -28,6 +28,13 @@ from PySide6.QtWidgets import (
 from app.i18n import t
 from app.services.sale_draft import ItemSnapshot, SaleDraft
 from app.ui.app_context import AppContext
+from app.text_scale import (
+    apply_table_row_height,
+    complete_sale_button_min_height,
+    muted_label_stylesheet,
+    page_title_stylesheet,
+    total_label_stylesheet,
+)
 from app.ui.widgets.common import combined_name, guarded, show_error, show_info
 
 _QUANTITY_COLUMN = 2
@@ -48,7 +55,6 @@ class SalesPage(QWidget):
         layout = QVBoxLayout(self)
 
         self.title_label = QLabel()
-        self.title_label.setStyleSheet("font-size: 20px; font-weight: 600;")
         layout.addWidget(self.title_label)
 
         entry_layout = QHBoxLayout()
@@ -70,7 +76,6 @@ class SalesPage(QWidget):
         layout.addLayout(entry_layout)
 
         self.info_label = QLabel()
-        self.info_label.setStyleSheet("color: #555555;")
         layout.addWidget(self.info_label)
 
         self.table = QTableWidget(0, 5)
@@ -84,11 +89,9 @@ class SalesPage(QWidget):
 
         bottom_layout = QHBoxLayout()
         self.total_label = QLabel()
-        self.total_label.setStyleSheet("font-size: 18px; font-weight: 700;")
         bottom_layout.addWidget(self.total_label)
         bottom_layout.addStretch()
         self.complete_button = QPushButton()
-        self.complete_button.setMinimumHeight(44)
         self.complete_button.setShortcut(QKeySequence("F12"))
         self.complete_button.clicked.connect(self._on_complete_sale)
         bottom_layout.addWidget(self.complete_button)
@@ -197,6 +200,13 @@ class SalesPage(QWidget):
         if 0 <= index < len(lines):
             self.draft.remove(lines[index].item.id)
             self._refresh_table()
+
+    def apply_text_scale(self, preset: str) -> None:
+        self.title_label.setStyleSheet(page_title_stylesheet(preset))
+        self.info_label.setStyleSheet(muted_label_stylesheet())
+        self.total_label.setStyleSheet(total_label_stylesheet(preset))
+        self.complete_button.setMinimumHeight(complete_sale_button_min_height(preset))
+        apply_table_row_height(self.table, preset)
 
     def _refresh_table(self) -> None:
         lines = self.draft.lines

@@ -25,6 +25,7 @@ from PySide6.QtWidgets import (
 from app.i18n import t
 from app.services.report_service import ProductReport
 from app.ui.app_context import AppContext
+from app.text_scale import apply_table_row_height, hint_label_stylesheet, page_title_stylesheet
 from app.ui.widgets.common import combined_name, guarded, show_info
 from app.utils.dates import DateRange, custom, day, month, year
 
@@ -45,7 +46,6 @@ class ReportsPage(QWidget):
         layout = QVBoxLayout(self)
 
         self.title_label = QLabel()
-        self.title_label.setStyleSheet("font-size: 20px; font-weight: 600;")
         layout.addWidget(self.title_label)
 
         period_layout = QHBoxLayout()
@@ -100,8 +100,18 @@ class ReportsPage(QWidget):
 
         self.slow_sellers_hint_label = QLabel()
         self.slow_sellers_hint_label.setWordWrap(True)
-        self.slow_sellers_hint_label.setStyleSheet("color: #777777; font-style: italic;")
         layout.addWidget(self.slow_sellers_hint_label)
+
+    def apply_text_scale(self, preset: str) -> None:
+        self.title_label.setStyleSheet(page_title_stylesheet(preset))
+        self.slow_sellers_hint_label.setStyleSheet(hint_label_stylesheet())
+        for table in (
+            self.products_table,
+            self.best_sellers_table,
+            self.most_profitable_table,
+            self.slow_sellers_table,
+        ):
+            apply_table_row_height(table, preset)
 
     def retranslate(self) -> None:
         self.title_label.setText(t("reports.title"))

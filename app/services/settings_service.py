@@ -15,12 +15,14 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.database.models import Setting
+from app.text_scale import DEFAULT_TEXT_SCALE, normalize_text_scale
 from app.utils.money import to_decimal
 
 LOW_STOCK_THRESHOLD_KEY = "low_stock_threshold"
 DEFAULT_SELL_PRICE_KEY = "default_sell_price"
 CURRENCY_SYMBOL_KEY = "currency_symbol"
 LANGUAGE_KEY = "language"
+TEXT_SCALE_KEY = "text_scale"
 
 
 @dataclass(frozen=True)
@@ -29,6 +31,7 @@ class AppSettings:
     default_sell_price: Decimal
     currency_symbol: str
     language: str
+    text_scale: str
 
 
 class SettingsService:
@@ -43,6 +46,7 @@ class SettingsService:
             default_sell_price=to_decimal(rows.get(DEFAULT_SELL_PRICE_KEY, "1.00")),
             currency_symbol=rows.get(CURRENCY_SYMBOL_KEY, "$"),
             language=rows.get(LANGUAGE_KEY, "es"),
+            text_scale=normalize_text_scale(rows.get(TEXT_SCALE_KEY, DEFAULT_TEXT_SCALE)),
         )
 
     def get(self, key: str, default: str | None = None) -> str | None:

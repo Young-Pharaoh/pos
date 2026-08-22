@@ -20,6 +20,7 @@ from PySide6.QtWidgets import (
 
 from app.i18n import t
 from app.ui.app_context import AppContext
+from app.text_scale import page_title_stylesheet
 from app.ui.widgets.common import combined_name
 from app.ui.widgets.stat_card import StatCard
 
@@ -36,7 +37,6 @@ class DashboardPage(QWidget):
 
         header = QHBoxLayout()
         self.title_label = QLabel()
-        self.title_label.setStyleSheet("font-size: 20px; font-weight: 600;")
         header.addWidget(self.title_label)
         header.addStretch()
         self.refresh_button = QPushButton()
@@ -84,6 +84,13 @@ class DashboardPage(QWidget):
         self.low_stock_box.setTitle(t("dashboard.low_stock"))
         self.best_sellers_box.setTitle(t("dashboard.best_sellers"))
         self.refresh()
+
+    def apply_text_scale(self, preset: str) -> None:
+        self.title_label.setStyleSheet(page_title_stylesheet(preset))
+        self.today_sales_card.apply_text_scale(preset)
+        self.month_sales_card.apply_text_scale(preset)
+        self.month_profit_card.apply_text_scale(preset)
+        self.inventory_value_card.apply_text_scale(preset)
 
     def refresh(self) -> None:
         summary = self.context.report_service.dashboard_summary(
