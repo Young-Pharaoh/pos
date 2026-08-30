@@ -132,8 +132,7 @@ STRINGS: dict[str, dict[str, str]] = {
         "product_dialog.initial_stock": "Stock inicial",
         "product_dialog.image": "Imagen",
         "product_dialog.note_locked_fields": (
-            "El precio de compra y el stock no se editan aqui. "
-            "Use 'Agregar Stock' para registrar nuevas compras."
+            "El stock no se edita aqui. Use 'Agregar Stock' para registrar nuevas compras."
         ),
         "add_stock_dialog.title": "Agregar Stock: {name}",
         "add_stock_dialog.current_stock": "Stock actual: {stock}",
@@ -347,7 +346,7 @@ STRINGS: dict[str, dict[str, str]] = {
         "product_dialog.initial_stock": "\u0627\u0644\u0645\u062e\u0632\u0648\u0646 \u0627\u0644\u0623\u0648\u0644\u064a",
         "product_dialog.image": "\u0627\u0644\u0635\u0648\u0631\u0629",
         "product_dialog.note_locked_fields": (
-            "\u0644\u0627 \u064a\u0645\u0643\u0646 \u062a\u0639\u062f\u064a\u0644 \u0633\u0639\u0631 \u0627\u0644\u0634\u0631\u0627\u0621 \u0623\u0648 \u0627\u0644\u0645\u062e\u0632\u0648\u0646 \u0645\u0646 \u0647\u0646\u0627. "
+            "\u0644\u0627 \u064a\u0645\u0643\u0646 \u062a\u0639\u062f\u064a\u0644 \u0627\u0644\u0645\u062e\u0632\u0648\u0646 \u0645\u0646 \u0647\u0646\u0627. "
             "\u0627\u0633\u062a\u062e\u062f\u0645 '\u0625\u0636\u0627\u0641\u0629 \u0645\u062e\u0632\u0648\u0646' \u0644\u062a\u0633\u062c\u064a\u0644 \u0645\u0634\u062a\u0631\u064a\u0627\u062a \u062c\u062f\u064a\u062f\u0629."
         ),
         "add_stock_dialog.title": "\u0625\u0636\u0627\u0641\u0629 \u0645\u062e\u0632\u0648\u0646: {name}",

@@ -56,7 +56,11 @@ class Item(Base):
 
 
 class StockPurchase(Base):
-    """Historical record of every stock addition. Never deleted or edited."""
+    """Historical record of every stock addition.
+
+    Rows are normally append-only. A direct purchase-price correction on the
+    product may update rows whose ``unit_price`` matched the old average.
+    """
 
     __tablename__ = "stock_purchases"
     __table_args__ = (

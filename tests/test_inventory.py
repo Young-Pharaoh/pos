@@ -173,22 +173,67 @@ def test_preview_add_stock_price_changed_false_when_same_price(inventory_service
     assert preview.price_changed is False
 
 
-def test_update_item_cannot_touch_stock_or_purchase_price(inventory_service):
+def test_update_item_cannot_touch_stock(inventory_service):
     item = create_shampoo(inventory_service, purchase_price=Decimal("0.70"), initial_stock=100)
     updated = inventory_service.update_item(item.id, name_es="Shampoo Nuevo", sell_price=Decimal("1.50"))
     assert updated.name_es == "Shampoo Nuevo"
     assert updated.sell_price == Decimal("1.5000")
-    # unaffected fields
     assert updated.stock == 100
     assert updated.purchase_price == Decimal("0.7000")
-    # update_item has no way to pass stock/purchase_price at all (by design).
+
     import inspect
 
     from app.services.inventory_service import InventoryService
 
     params = inspect.signature(InventoryService.update_item).parameters
     assert "stock" not in params
-    assert "purchase_price" not in params
+
+
+def test_update_item_can_correct_purchase_price(inventory_service):
+    item = create_shampoo(
+        inventory_service, purchase_price=Decimal("50.00"), initial_stock=10
+    )
+    updated = inventory_service.update_item(item.id, purchase_price=Decimal("0.50"))
+    assert updated.purchase_price == Decimal("0.5000")
+    assert updated.stock == 10
+
+
+def test_update_item_purchase_price_syncs_matching_stock_purchases(
+    inventory_service, session_factory
+):
+    from app.database.models import StockPurchase
+
+    item = create_shampoo(
+        inventory_service, purchase_price=Decimal("50.00"), initial_stock=10
+    )
+    inventory_service.update_item(item.id, purchase_price=Decimal("0.50"))
+
+    with session_factory() as session:
+        purchase = session.query(StockPurchase).filter_by(item_id=item.id).one()
+    assert purchase.unit_price == Decimal("0.5000")
+    assert purchase.total_price == Decimal("5.0000")
+
+
+def test_update_item_purchase_price_does_not_sync_unrelated_stock_purchases(
+    inventory_service, session_factory
+):
+    from app.database.models import StockPurchase
+
+    item = create_shampoo(inventory_service, purchase_price=Decimal("0.70"), initial_stock=100)
+    inventory_service.add_stock(item.id, 50, Decimal("0.80"))
+
+    inventory_service.update_item(item.id, purchase_price=Decimal("0.50"))
+
+    with session_factory() as session:
+        purchases = (
+            session.query(StockPurchase)
+            .filter_by(item_id=item.id)
+            .order_by(StockPurchase.id)
+            .all()
+        )
+    assert purchases[0].unit_price == Decimal("0.7000")
+    assert purchases[1].unit_price == Decimal("0.8000")
+    assert inventory_service.get_item(item.id).purchase_price == Decimal("0.5000")
 
 
 def test_update_item_rejects_blank_names(inventory_service):

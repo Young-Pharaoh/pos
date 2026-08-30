@@ -2,10 +2,10 @@
 
 This is the only place in the application allowed to change
 ``items.stock`` or ``items.purchase_price`` outside of a completed sale.
-The UI never edits those fields directly (see ``update_item``'s signature,
-which simply has no parameter for them) -- stock only ever moves through
-``add_stock``, which records the accompanying ``stock_purchases`` row in
-the same transaction.
+Stock only ever moves through ``add_stock`` (or a sale). Purchase price
+can be corrected directly via ``update_item``; matching ``stock_purchases``
+rows whose ``unit_price`` equals the old average are updated in the same
+transaction so purchase reports stay consistent with data-entry fixes.
 """
 
 from __future__ import annotations
@@ -191,15 +191,19 @@ class InventoryService:
         *,
         name_ar: str | None = None,
         name_es: str | None = None,
+        purchase_price=None,
         sell_price=None,
         image_path: str | None | object = ...,
     ) -> ItemView:
-        """Edit the metadata fields that are safe to change directly.
+        """Edit product metadata, including a direct purchase-price correction.
 
-        Purchase price and stock are intentionally not parameters here --
-        they can only change via ``add_stock`` (or a sale). ``image_path``
-        uses ``...`` (Ellipsis) as its "not provided" sentinel so callers can
-        still explicitly pass ``None`` to clear the image.
+        Stock is intentionally not a parameter here -- it can only change via
+        ``add_stock`` (or a sale). When ``purchase_price`` changes, any
+        ``stock_purchases`` row whose ``unit_price`` matched the old average
+        is updated so purchase reports reflect typo fixes at creation time.
+        Past ``sale_items`` costs are never touched. ``image_path`` uses ``...``
+        (Ellipsis) as its "not provided" sentinel so callers can still
+        explicitly pass ``None`` to clear the image.
         """
         with self._session_factory() as session:
             with session.begin():
@@ -213,6 +217,21 @@ class InventoryService:
                 _validate_names(new_name_ar, new_name_es)
                 item.name_ar = new_name_ar.strip()
                 item.name_es = new_name_es.strip()
+
+                if purchase_price is not None:
+                    new_purchase_price = _validate_price(
+                        purchase_price, "error.negative_purchase_price"
+                    )
+                    old_purchase_price = item.purchase_price
+                    if new_purchase_price != old_purchase_price:
+                        item.purchase_price = new_purchase_price
+                        purchases = PurchaseRepository(session)
+                        for purchase in purchases.list_by_item_id(item.id):
+                            if purchase.unit_price == old_purchase_price:
+                                purchase.unit_price = new_purchase_price
+                                purchase.total_price = quantize_money(
+                                    new_purchase_price * purchase.quantity
+                                )
 
                 if sell_price is not None:
                     item.sell_price = _validate_price(sell_price, "error.negative_sell_price")

@@ -1,11 +1,9 @@
 """Create/Edit product dialog.
 
-Purchase price and initial stock are only editable when creating a new
-product. In edit mode those two controls are disabled and a note points
-the user at "Add Stock" instead -- this is the UI-level enforcement of the
-spec's "do not directly manipulate stock/purchase price" rule; the service
-layer enforces the same rule structurally by not accepting those
-parameters in ``update_item``.
+Initial stock is only editable when creating a new product. In edit mode
+that control is disabled and a note points the user at "Add Stock" instead.
+Purchase price can be corrected in edit mode; stock still only moves through
+Add Stock or sales.
 """
 
 from __future__ import annotations
@@ -113,7 +111,6 @@ class ProductDialog(QDialog):
         layout.addWidget(self.button_box)
 
         if self.item is not None:
-            self.purchase_price_spin.setEnabled(False)
             self.initial_stock_spin.setEnabled(False)
 
     def retranslate(self) -> None:
@@ -189,8 +186,13 @@ class ProductDialog(QDialog):
                 item_id = created.id
                 previous_image = None
             else:
+                purchase_price = Decimal(str(self.purchase_price_spin.value()))
                 updated = self.context.inventory_service.update_item(
-                    self.item.id, name_ar=name_ar, name_es=name_es, sell_price=sell_price
+                    self.item.id,
+                    name_ar=name_ar,
+                    name_es=name_es,
+                    purchase_price=purchase_price,
+                    sell_price=sell_price,
                 )
                 item_id = updated.id
                 previous_image = self.item.image_path
